@@ -1,0 +1,671 @@
+-- ============================================
+-- MIMIW MUSIC GUI v2 (with Loop Button)
+-- ============================================
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ============================================
+-- DAFTAR LAGU
+-- ============================================
+local Songs = {
+    { Name = "COOL - HARDTEKK",                    Id = "rbxassetid://90851490275942" },
+    { Name = "DJ Yang2 Remix",                     Id = "rbxassetid://115189039255362" },
+    { Name = "HARDTEKK",                           Id = "rbxassetid://82696338249251" },
+    { Name = "LoW Cortisol (Ai Dua Em)",           Id = "rbxassetid://110919391228823" },
+    { Name = "Till - Stray wav",                   Id = "rbxassetid://120102995443063" },
+    { Name = "OMGF - Hello Your New Home",         Id = "rbxassetid://110788401793874" },
+    { Name = "Amazing Digital Circus OST",         Id = "rbxassetid://71186345039796" },
+    { Name = "Static No Body",                     Id = "rbxassetid://118295238504495" },
+    { Name = "Sinkin Town",                        Id = "rbxassetid://121135218586308" }, -- ⚠️ mungkin private
+    { Name = "Trillium",                           Id = "rbxassetid://126433682497062" },
+}
+
+-- ============================================
+-- THEME
+-- ============================================
+local Theme = {
+    Bg      = Color3.fromRGB(28, 18, 26),
+    Sidebar = Color3.fromRGB(22, 14, 20),
+    Card    = Color3.fromRGB(48, 32, 46),
+    Accent  = Color3.fromRGB(255, 105, 180),
+    AccentH = Color3.fromRGB(255, 140, 200),
+    AccentD = Color3.fromRGB(200, 60, 140),
+    Text    = Color3.fromRGB(255, 240, 250),
+    Sub     = Color3.fromRGB(200, 165, 190),
+    Good    = Color3.fromRGB(90, 210, 130),
+    Danger  = Color3.fromRGB(255, 80, 100),
+}
+local F = {
+    Title = Enum.Font.GothamBlack,
+    Head  = Enum.Font.GothamBold,
+    Body  = Enum.Font.GothamMedium,
+}
+
+-- ============================================
+-- HAPUS GUI LAMA
+-- ============================================
+for _, n in ipairs({"MimiwMusicGui", "MimiwMusicNotif"}) do
+    local o = PlayerGui:FindFirstChild(n)
+    if o then o:Destroy() end
+end
+
+-- ============================================
+-- PARENT GUI
+-- ============================================
+local _parent
+if gethui then
+    local ok, hui = pcall(gethui)
+    if ok and hui then _parent = hui end
+end
+if not _parent then
+    local ok, core = pcall(function() return game:GetService("CoreGui") end)
+    if ok and core then _parent = core end
+end
+if not _parent then _parent = PlayerGui end
+
+-- ============================================
+-- SCREEN GUI
+-- ============================================
+local SG = Instance.new("ScreenGui")
+SG.Name = "MimiwMusicGui"
+SG.ResetOnSpawn = false
+SG.IgnoreGuiInset = true
+SG.DisplayOrder = 999998
+SG.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SG.Parent = _parent
+
+-- ============================================
+-- MAIN FRAME
+-- ============================================
+local Main = Instance.new("Frame", SG)
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 300, 0, 380)
+Main.Position = UDim2.new(0.5, -150, 0.5, -190)
+Main.BackgroundColor3 = Theme.Bg
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 14)
+
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Theme.Accent
+Stroke.Thickness = 1.5
+Stroke.Transparency = 0.4
+
+local TopLine = Instance.new("Frame", Main)
+TopLine.Size = UDim2.new(1, 0, 0, 2)
+TopLine.BackgroundColor3 = Theme.Accent
+TopLine.BorderSizePixel = 0
+Instance.new("UICorner", TopLine).CornerRadius = UDim.new(0, 14)
+
+-- ============================================
+-- HEADER
+-- ============================================
+local Header = Instance.new("Frame", Main)
+Header.Size = UDim2.new(1, 0, 0, 40)
+Header.Position = UDim2.new(0, 0, 0, 2)
+Header.BackgroundColor3 = Theme.Sidebar
+Header.BorderSizePixel = 0
+
+local Dot = Instance.new("Frame", Header)
+Dot.Size = UDim2.new(0, 10, 0, 10)
+Dot.Position = UDim2.new(0, 18, 0.5, -5)
+Dot.BackgroundColor3 = Theme.Accent
+Dot.BorderSizePixel = 0
+Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+
+local TitleLbl = Instance.new("TextLabel", Header)
+TitleLbl.Size = UDim2.new(1, -140, 1, 0)
+TitleLbl.Position = UDim2.new(0, 38, 0, 0)
+TitleLbl.BackgroundTransparency = 1
+TitleLbl.Text = "🎵 Mimiw Music"
+TitleLbl.TextColor3 = Theme.Accent
+TitleLbl.TextSize = 15
+TitleLbl.Font = F.Title
+TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ============================================
+-- TOMBOL HEADER (Loop, Min, Close)
+-- ============================================
+local isLooping = false
+
+-- Tombol Loop
+local LoopBtn = Instance.new("TextButton", Header)
+LoopBtn.Size = UDim2.new(0, 26, 0, 26)
+LoopBtn.Position = UDim2.new(1, -98, 0.5, -13)
+LoopBtn.BackgroundColor3 = Theme.Card
+LoopBtn.BorderSizePixel = 0
+LoopBtn.Text = "🔁"
+LoopBtn.TextColor3 = Theme.Sub
+LoopBtn.TextSize = 13
+LoopBtn.Font = F.Head
+LoopBtn.AutoButtonColor = false
+Instance.new("UICorner", LoopBtn).CornerRadius = UDim.new(0, 6)
+
+local loopStroke = Instance.new("UIStroke", LoopBtn)
+loopStroke.Color = Theme.Accent
+loopStroke.Thickness = 0
+loopStroke.Transparency = 1
+
+-- Tombol Minimize
+local MinBtn = Instance.new("TextButton", Header)
+MinBtn.Size = UDim2.new(0, 26, 0, 26)
+MinBtn.Position = UDim2.new(1, -66, 0.5, -13)
+MinBtn.BackgroundColor3 = Theme.Card
+MinBtn.BorderSizePixel = 0
+MinBtn.Text = "─"
+MinBtn.TextColor3 = Theme.Sub
+MinBtn.TextSize = 13
+MinBtn.Font = F.Head
+MinBtn.AutoButtonColor = false
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+MinBtn.MouseEnter:Connect(function()
+    TweenService:Create(MinBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Accent}):Play()
+    MinBtn.TextColor3 = Color3.new(1, 1, 1)
+end)
+MinBtn.MouseLeave:Connect(function()
+    TweenService:Create(MinBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+    MinBtn.TextColor3 = Theme.Sub
+end)
+
+-- Tombol Close
+local CloseBtn = Instance.new("TextButton", Header)
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.Position = UDim2.new(1, -34, 0.5, -13)
+CloseBtn.BackgroundColor3 = Theme.Card
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Theme.Sub
+CloseBtn.TextSize = 13
+CloseBtn.Font = F.Head
+CloseBtn.AutoButtonColor = false
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+CloseBtn.MouseEnter:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Danger}):Play()
+    CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+end)
+CloseBtn.MouseLeave:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+    CloseBtn.TextColor3 = Theme.Sub
+end)
+
+-- ============================================
+-- NOW PLAYING
+-- ============================================
+local NowFrame = Instance.new("Frame", Main)
+NowFrame.Size = UDim2.new(1, -20, 0, 60)
+NowFrame.Position = UDim2.new(0, 10, 0, 50)
+NowFrame.BackgroundColor3 = Theme.Card
+NowFrame.BorderSizePixel = 0
+Instance.new("UICorner", NowFrame).CornerRadius = UDim.new(0, 10)
+
+local IconBox = Instance.new("Frame", NowFrame)
+IconBox.Size = UDim2.new(0, 44, 0, 44)
+IconBox.Position = UDim2.new(0, 8, 0.5, -22)
+IconBox.BackgroundColor3 = Theme.Bg
+IconBox.BorderSizePixel = 0
+Instance.new("UICorner", IconBox).CornerRadius = UDim.new(0, 8)
+
+local MusicIcon = Instance.new("TextLabel", IconBox)
+MusicIcon.Size = UDim2.new(1, 0, 1, 0)
+MusicIcon.BackgroundTransparency = 1
+MusicIcon.Text = "🎵"
+MusicIcon.TextSize = 22
+
+local SongNameLbl = Instance.new("TextLabel", NowFrame)
+SongNameLbl.Size = UDim2.new(1, -70, 0, 20)
+SongNameLbl.Position = UDim2.new(0, 60, 0, 10)
+SongNameLbl.BackgroundTransparency = 1
+SongNameLbl.Text = "Belum ada lagu"
+SongNameLbl.TextColor3 = Theme.Text
+SongNameLbl.TextSize = 12
+SongNameLbl.Font = F.Head
+SongNameLbl.TextXAlignment = Enum.TextXAlignment.Left
+SongNameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+
+local StatusLbl = Instance.new("TextLabel", NowFrame)
+StatusLbl.Size = UDim2.new(1, -70, 0, 16)
+StatusLbl.Position = UDim2.new(0, 60, 0, 32)
+StatusLbl.BackgroundTransparency = 1
+StatusLbl.Text = "Klik lagu di bawah untuk play"
+StatusLbl.TextColor3 = Theme.Sub
+StatusLbl.TextSize = 10
+StatusLbl.Font = F.Body
+StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ============================================
+-- PLAYER CONTROLS
+-- ============================================
+local Controls = Instance.new("Frame", Main)
+Controls.Size = UDim2.new(1, -20, 0, 50)
+Controls.Position = UDim2.new(0, 10, 0, 118)
+Controls.BackgroundColor3 = Theme.Card
+Controls.BorderSizePixel = 0
+Instance.new("UICorner", Controls).CornerRadius = UDim.new(0, 10)
+
+local function mkCtrlBtn(text, xPos, color)
+    local b = Instance.new("TextButton", Controls)
+    b.Size = UDim2.new(0, 38, 0, 38)
+    b.Position = UDim2.new(0.5, xPos, 0.5, -19)
+    b.BackgroundColor3 = color
+    b.BorderSizePixel = 0
+    b.Text = text
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.TextSize = 16
+    b.Font = F.Head
+    b.AutoButtonColor = false
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    return b
+end
+
+local PrevBtn = mkCtrlBtn("⏮", -70, Theme.Sidebar)
+local PlayBtn = mkCtrlBtn("▶", 0, Theme.Accent)
+local NextBtn = mkCtrlBtn("⏭", 70, Theme.Sidebar)
+
+for _, btn in ipairs({PrevBtn, PlayBtn, NextBtn}) do
+    local origColor = btn.BackgroundColor3
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.AccentH}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = origColor}):Play()
+    end)
+end
+
+-- ============================================
+-- VOLUME SLIDER
+-- ============================================
+local VolFrame = Instance.new("Frame", Main)
+VolFrame.Size = UDim2.new(1, -20, 0, 34)
+VolFrame.Position = UDim2.new(0, 10, 0, 174)
+VolFrame.BackgroundColor3 = Theme.Card
+VolFrame.BorderSizePixel = 0
+Instance.new("UICorner", VolFrame).CornerRadius = UDim.new(0, 10)
+
+local VolIcon = Instance.new("TextLabel", VolFrame)
+VolIcon.Size = UDim2.new(0, 26, 1, 0)
+VolIcon.Position = UDim2.new(0, 6, 0, 0)
+VolIcon.BackgroundTransparency = 1
+VolIcon.Text = "🔊"
+VolIcon.TextSize = 14
+
+local VolTrack = Instance.new("Frame", VolFrame)
+VolTrack.Size = UDim2.new(1, -80, 0, 6)
+VolTrack.Position = UDim2.new(0, 36, 0.5, -3)
+VolTrack.BackgroundColor3 = Color3.fromRGB(50, 42, 62)
+VolTrack.BorderSizePixel = 0
+Instance.new("UICorner", VolTrack).CornerRadius = UDim.new(1, 0)
+
+local VolFill = Instance.new("Frame", VolTrack)
+VolFill.Size = UDim2.new(0.5, 0, 1, 0)
+VolFill.BackgroundColor3 = Theme.Accent
+VolFill.BorderSizePixel = 0
+Instance.new("UICorner", VolFill).CornerRadius = UDim.new(1, 0)
+
+local VolKnob = Instance.new("Frame", VolTrack)
+VolKnob.Size = UDim2.new(0, 12, 0, 12)
+VolKnob.Position = UDim2.new(0.5, -6, 0.5, -6)
+VolKnob.BackgroundColor3 = Color3.new(1, 1, 1)
+VolKnob.BorderSizePixel = 0
+Instance.new("UICorner", VolKnob).CornerRadius = UDim.new(1, 0)
+
+local VolBtn = Instance.new("TextButton", VolTrack)
+VolBtn.Size = UDim2.new(1, 0, 1, 0)
+VolBtn.BackgroundTransparency = 1
+VolBtn.Text = ""
+
+local VolVal = 0.5
+local volDrag = false
+local function updVol(input)
+    local x = input.Position.X - VolTrack.AbsolutePosition.X
+    local p = math.clamp(x / VolTrack.AbsoluteSize.X, 0, 1)
+    VolVal = p
+    VolFill.Size = UDim2.new(p, 0, 1, 0)
+    VolKnob.Position = UDim2.new(p, -6, 0.5, -6)
+end
+VolBtn.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        volDrag = true
+        updVol(i)
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if volDrag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        updVol(i)
+    end
+end)
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        volDrag = false
+    end
+end)
+
+-- ============================================
+-- SONG LIST
+-- ============================================
+local ListFrame = Instance.new("Frame", Main)
+ListFrame.Size = UDim2.new(1, -20, 1, -224)
+ListFrame.Position = UDim2.new(0, 10, 0, 214)
+ListFrame.BackgroundColor3 = Theme.Card
+ListFrame.BorderSizePixel = 0
+Instance.new("UICorner", ListFrame).CornerRadius = UDim.new(0, 10)
+
+local ListScroll = Instance.new("ScrollingFrame", ListFrame)
+ListScroll.Size = UDim2.new(1, -8, 1, -8)
+ListScroll.Position = UDim2.new(0, 4, 0, 4)
+ListScroll.BackgroundTransparency = 1
+ListScroll.BorderSizePixel = 0
+ListScroll.ScrollBarThickness = 3
+ListScroll.ScrollBarImageColor3 = Theme.Accent
+ListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local LL = Instance.new("UIListLayout", ListScroll)
+LL.Padding = UDim.new(0, 3)
+LL.SortOrder = Enum.SortOrder.LayoutOrder
+
+local LP = Instance.new("UIPadding", ListScroll)
+LP.PaddingTop = UDim.new(0, 4)
+LP.PaddingLeft = UDim.new(0, 4)
+LP.PaddingRight = UDim.new(0, 4)
+LP.PaddingBottom = UDim.new(0, 4)
+
+-- ============================================
+-- SOUND
+-- ============================================
+local MusicSound = Instance.new("Sound")
+MusicSound.Name = "MimiwMusic"
+MusicSound.Volume = 0.5
+MusicSound.Looped = false
+MusicSound.Parent = SG
+
+local currentIndex = 0
+local isPlaying = false
+local isPaused = false
+local songButtons = {}
+local statusResetThread = nil
+
+-- ============================================
+-- HELPER: Update Status dengan reset otomatis
+-- ============================================
+local function setStatus(text, resetAfter)
+    StatusLbl.Text = text
+    if statusResetThread then
+        task.cancel(statusResetThread)
+        statusResetThread = nil
+    end
+    if resetAfter then
+        statusResetThread = task.delay(resetAfter, function()
+            if isPlaying and not isPaused then
+                StatusLbl.Text = isLooping and "🔁 Sedang diputar (Loop)" or "▶ Sedang diputar"
+            end
+            statusResetThread = nil
+        end)
+    end
+end
+
+-- ============================================
+-- FUNGSI PLAY
+-- ============================================
+local function PlaySong(index)
+    if not Songs[index] then return end
+    currentIndex = index
+    local song = Songs[index]
+
+    MusicSound:Stop()
+    MusicSound.SoundId = song.Id
+    MusicSound.TimePosition = 0
+    MusicSound.Volume = VolVal
+
+    SongNameLbl.Text = song.Name
+    setStatus("⏳ Loading...")
+
+    local ok = pcall(function() MusicSound:Play() end)
+    if not ok then
+        setStatus("❌ Gagal play (ID ga valid)")
+        return
+    end
+
+    task.wait(0.3)
+    if MusicSound.IsPlaying then
+        setStatus(isLooping and "🔁 Sedang diputar (Loop)" or "▶ Sedang diputar")
+        PlayBtn.Text = "⏸"
+        isPlaying = true
+        isPaused = false
+    else
+        task.wait(1)
+        if MusicSound.IsPlaying then
+            setStatus(isLooping and "🔁 Sedang diputar (Loop)" or "▶ Sedang diputar")
+            PlayBtn.Text = "⏸"
+            isPlaying = true
+            isPaused = false
+        else
+            setStatus("❌ Gagal load lagu")
+        end
+    end
+
+    for i, btn in ipairs(songButtons) do
+        if i == index then
+            btn.BackgroundColor3 = Theme.AccentD
+        else
+            btn.BackgroundColor3 = Theme.Bg
+        end
+    end
+end
+
+local function TogglePlay()
+    if currentIndex == 0 then
+        PlaySong(1)
+        return
+    end
+    if isPlaying and not isPaused then
+        MusicSound:Pause()
+        PlayBtn.Text = "▶"
+        setStatus("⏸ Di-pause")
+        isPaused = true
+    else
+        MusicSound:Resume()
+        PlayBtn.Text = "⏸"
+        setStatus(isLooping and "🔁 Sedang diputar (Loop)" or "▶ Sedang diputar")
+        isPaused = false
+    end
+end
+
+-- ============================================
+-- BIKIN LIST LAGU
+-- ============================================
+for i, song in ipairs(Songs) do
+    local b = Instance.new("TextButton", ListScroll)
+    b.Size = UDim2.new(1, 0, 0, 32)
+    b.BackgroundColor3 = Theme.Bg
+    b.BorderSizePixel = 0
+    b.Text = "  " .. i .. ". " .. song.Name
+    b.TextColor3 = Theme.Text
+    b.TextSize = 11
+    b.Font = F.Body
+    b.TextXAlignment = Enum.TextXAlignment.Left
+    b.AutoButtonColor = false
+    b.TextTruncate = Enum.TextTruncate.AtEnd
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+    b.MouseEnter:Connect(function()
+        if i ~= currentIndex then
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+        end
+    end)
+    b.MouseLeave:Connect(function()
+        if i ~= currentIndex then
+            TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Bg}):Play()
+        end
+    end)
+    b.MouseButton1Click:Connect(function()
+        PlaySong(i)
+    end)
+
+    table.insert(songButtons, b)
+end
+
+-- ============================================
+-- EVENT BUTTON
+-- ============================================
+PlayBtn.MouseButton1Click:Connect(TogglePlay)
+
+NextBtn.MouseButton1Click:Connect(function()
+    local nextIndex = currentIndex + 1
+    if nextIndex > #Songs then nextIndex = 1 end
+    PlaySong(nextIndex)
+end)
+
+PrevBtn.MouseButton1Click:Connect(function()
+    local prevIndex = currentIndex - 1
+    if prevIndex < 1 then prevIndex = #Songs end
+    PlaySong(prevIndex)
+end)
+
+-- ============================================
+-- LOOP BUTTON TOGGLE
+-- ============================================
+local function updateLoopVisual()
+    if isLooping then
+        LoopBtn.BackgroundColor3 = Theme.Good
+        LoopBtn.TextColor3 = Color3.new(1, 1, 1)
+        loopStroke.Thickness = 1.5
+        loopStroke.Transparency = 0.3
+        loopStroke.Color = Theme.Good
+    else
+        LoopBtn.BackgroundColor3 = Theme.Card
+        LoopBtn.TextColor3 = Theme.Sub
+        loopStroke.Thickness = 0
+        loopStroke.Transparency = 1
+    end
+end
+
+LoopBtn.MouseButton1Click:Connect(function()
+    isLooping = not isLooping
+    updateLoopVisual()
+    if isLooping then
+        setStatus("🔁 Loop: ON (lagu ulang terus)", 2)
+    else
+        setStatus("➡️ Loop: OFF (auto ganti lagu)", 2)
+    end
+end)
+
+-- Hover effect Loop (kalau ga lagi ON)
+LoopBtn.MouseEnter:Connect(function()
+    if not isLooping then
+        TweenService:Create(LoopBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Accent}):Play()
+        LoopBtn.TextColor3 = Color3.new(1, 1, 1)
+    end
+end)
+LoopBtn.MouseLeave:Connect(function()
+    if not isLooping then
+        TweenService:Create(LoopBtn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+        LoopBtn.TextColor3 = Theme.Sub
+    end
+end)
+
+updateLoopVisual()
+
+-- ============================================
+-- AUTO NEXT / LOOP SAAT LAGU HABIS
+-- ============================================
+MusicSound.Ended:Connect(function()
+    if isLooping then
+        -- Loop ON: ulang lagu yang sama
+        PlaySong(currentIndex)
+    else
+        -- Loop OFF: ganti ke lagu berikutnya
+        local nextIndex = currentIndex + 1
+        if nextIndex > #Songs then nextIndex = 1 end
+        PlaySong(nextIndex)
+    end
+end)
+
+-- ============================================
+-- UPDATE VOLUME
+-- ============================================
+RunService.Heartbeat:Connect(function()
+    if MusicSound.Volume ~= VolVal then
+        MusicSound.Volume = VolVal
+    end
+end)
+
+-- ============================================
+-- MINIMIZE / CLOSE
+-- ============================================
+local savedSize = nil
+local savedPos = nil
+local FloatingIcon = nil
+
+local function createFloatingIcon()
+    if FloatingIconlocal function createFloatingIcon()
+    if FloatingIcon and FloatingIcon.Parent then return end
+    FloatingIcon = Instance.new("TextButton", SG)
+    FloatingIcon.Name = "MusicFloatIcon"
+    FloatingIcon.Size = UDim2.new(0, 50, 0, 50)
+    FloatingIcon.Position = UDim2.new(0, 20, 0.5, -25)
+    FloatingIcon.BackgroundColor3 = Theme.Accent
+    FloatingIcon.BorderSizePixel = 0
+    FloatingIcon.Text = "🎵"
+    FloatingIcon.TextSize = 22
+    FloatingIcon.TextColor3 = Color3.new(1, 1, 1)
+    FloatingIcon.Font = F.Head
+    FloatingIcon.AutoButtonColor = false
+    FloatingIcon.Active = true
+    FloatingIcon.Draggable = true
+    Instance.new("UICorner", FloatingIcon).CornerRadius = UDim.new(1, 0)
+    local s = Instance.new("UIStroke", FloatingIcon)
+    s.Color = Theme.Accent
+    s.Thickness = 2
+
+    FloatingIcon.MouseButton1Click:Connect(function()
+        TweenService:Create(FloatingIcon, TweenInfo.new(0.15), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.delay(0.15, function()
+            if FloatingIcon then FloatingIcon.Visible = false end
+            Main.Visible = true
+            Main.Size = UDim2.new(0, 0, 0, 0)
+            Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+            local rs = savedSize or UDim2.new(0, 300, 0, 380)
+            local rp = savedPos or UDim2.new(0.5, -150, 0.5, -190)
+            TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = rs,
+                Position = rp,
+            }):Play()
+        end)
+    end)
+end
+
+MinBtn.MouseButton1Click:Connect(function()
+    savedSize = Main.Size
+    savedPos = Main.Position
+    TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+    }):Play()
+    task.delay(0.25, function()
+        Main.Visible = false
+        if not FloatingIcon then createFloatingIcon() end
+        FloatingIcon.Visible = true
+        FloatingIcon.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(FloatingIcon, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 50, 0, 50),
+        }):Play()
+    end)
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    if MusicSound then
+        MusicSound:Stop()
+        MusicSound:Destroy()
+    end
+    SG:Destroy()
+end)
+
+-- ============================================
+-- STARTUP
+-- ============================================
